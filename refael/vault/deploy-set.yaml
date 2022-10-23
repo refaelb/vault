@@ -1,0 +1,187 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    cni.projectcalico.org/podIP: 10.42.0.242/32
+    cni.projectcalico.org/podIPs: 10.42.0.242/32
+  creationTimestamp: "2022-09-15T05:24:32Z"
+  generateName: vault-
+  labels:
+    app.kubernetes.io/instance: vault
+    app.kubernetes.io/name: vault
+    component: server
+    controller-revision-hash: vault-6f5fbf8f4c
+    helm.sh/chart: vault-0.22.0
+    statefulset.kubernetes.io/pod-name: vault-0
+  name: vault-0
+  namespace: vault
+  ownerReferences:
+  - apiVersion: apps/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: StatefulSet
+    name: vault
+    uid: 02dfd94e-e519-47c0-b24c-401aeb5056c9
+  resourceVersion: "12939907"
+  selfLink: /api/v1/namespaces/vault/pods/vault-0
+  uid: cabecaf1-b248-4463-87ed-53579ac1e383
+spec:
+  containers:
+  - args:
+    - "/usr/local/bin/docker-entrypoint.sh vault server -dev \n"
+    command:
+    - /bin/sh
+    - -ec
+    env:
+    - name: HOST_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.hostIP
+    - name: POD_IP
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: status.podIP
+    - name: VAULT_K8S_POD_NAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: VAULT_K8S_NAMESPACE
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.namespace
+    - name: VAULT_ADDR
+      value: http://127.0.0.1:8200
+    - name: VAULT_API_ADDR
+      value: http://$(POD_IP):8200
+    - name: SKIP_CHOWN
+      value: "true"
+    - name: SKIP_SETCAP
+      value: "true"
+    - name: HOSTNAME
+      valueFrom:
+        fieldRef:
+          apiVersion: v1
+          fieldPath: metadata.name
+    - name: VAULT_CLUSTER_ADDR
+      value: https://$(HOSTNAME).vault-internal:8201
+    - name: HOME
+      value: /home/vault
+    - name: VAULT_DEV_ROOT_TOKEN_ID
+      value: root
+    - name: VAULT_DEV_LISTEN_ADDRESS
+      value: '[::]:8200'
+    image: hashicorp/vault:1.11.3
+    imagePullPolicy: IfNotPresent
+    lifecycle:
+      preStop:
+        exec:
+          command:
+          - /bin/sh
+          - -c
+          - sleep 5 && kill -SIGTERM $(pidof vault)
+    name: vault
+    ports:
+    - containerPort: 8200
+      name: http
+      protocol: TCP
+    - containerPort: 8201
+      name: https-internal
+      protocol: TCP
+    - containerPort: 8202
+      name: http-rep
+      protocol: TCP
+    readinessProbe:
+      exec:
+        command:
+        - /bin/sh
+        - -ec
+        - vault status -tls-skip-verify
+      failureThreshold: 2
+      initialDelaySeconds: 5
+      periodSeconds: 5
+      successThreshold: 1
+      timeoutSeconds: 3
+    resources: {}
+    securityContext:
+      allowPrivilegeEscalation: false
+    terminationMessagePath: /dev/termination-log
+    terminationMessagePolicy: File
+    volumeMounts:
+    - mountPath: /home/vault
+      name: home
+    - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+      name: vault-token-8qd7j
+      readOnly: true
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostname: vault-0
+  nodeName: worker-node-1
+  priority: 0
+  restartPolicy: Always
+  schedulerName: default-scheduler
+  securityContext:
+    fsGroup: 1000
+    runAsGroup: 1000
+    runAsNonRoot: true
+    runAsUser: 100
+  serviceAccount: vault
+  serviceAccountName: vault
+  subdomain: vault-internal
+  terminationGracePeriodSeconds: 10
+  tolerations:
+  - effect: NoExecute
+    key: node.kubernetes.io/not-ready
+    operator: Exists
+    tolerationSeconds: 300
+  - effect: NoExecute
+    key: node.kubernetes.io/unreachable
+    operator: Exists
+    tolerationSeconds: 300
+  volumes:
+  - emptyDir: {}
+    name: home
+  - name: vault-token-8qd7j
+    secret:
+      defaultMode: 420
+      secretName: vault-token-8qd7j
+status:
+  conditions:
+  - lastProbeTime: null
+    lastTransitionTime: "2022-09-15T05:24:33Z"
+    status: "True"
+    type: Initialized
+  - lastProbeTime: null
+    lastTransitionTime: "2022-09-15T05:24:49Z"
+    status: "True"
+    type: Ready
+  - lastProbeTime: null
+    lastTransitionTime: "2022-09-15T05:24:49Z"
+    status: "True"
+    type: ContainersReady
+  - lastProbeTime: null
+    lastTransitionTime: "2022-09-15T05:24:33Z"
+    status: "True"
+    type: PodScheduled
+  containerStatuses:
+  - containerID: docker://5d756a40ce97ffae8e1ab7ab3054efe55e4a6be42a262db51d41fe346481755e
+    image: hashicorp/vault:1.11.3
+    imageID: docker-pullable://hashicorp/vault@sha256:0fe23bbef12a1b304fec8e288468d3f83b6cccd7f8af178d315337ded587d231
+    lastState: {}
+    name: vault
+    ready: true
+    restartCount: 0
+    started: true
+    state:
+      running:
+        startedAt: "2022-09-15T05:24:41Z"
+  hostIP: 10.0.1.7
+  phase: Running
+  podIP: 10.42.0.242
+  podIPs:
+  - ip: 10.42.0.242
+  qosClass: BestEffort
+  startTime: "2022-09-15T05:24:33Z"
