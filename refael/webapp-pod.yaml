@@ -1,14 +1,15 @@
 kind: Pod
 apiVersion: v1
 metadata:
-  name: webapp
+  name: {{ .Values.name }}
 spec:
-  serviceAccountName: webapp-sa
+  serviceAccountName: {{ .Values.namespace }}-sa
   containers:
-  - image: jweissig/app:0.0.1
-    name: webapp
+  - image: {{ .Values.image.name }}
+    name: {{ .Values.name }}
     env:
-    - name: DB_PASSWORD
+    {{- range .Values.config.env }}
+    - name: {{ .name }}
       valueFrom:
         secretKeyRef:
           name: dbpass
@@ -23,4 +24,4 @@ spec:
         driver: secrets-store.csi.k8s.io
         readOnly: true
         volumeAttributes:
-          secretProviderClass: "vault-database"
+          secretProviderClass: {{ .Values.secret.name }}

@@ -1,7 +1,8 @@
+{{- if .Values.service -}}
 apiVersion: secrets-store.csi.x-k8s.io/v1
 kind: SecretProviderClass
 metadata:
-  name: vault-database
+  name: {{ .Values.name }}
 spec:
   provider: vault
   secretObjects:
@@ -12,8 +13,8 @@ spec:
     type: Opaque
   parameters:
     vaultAddress: "http://vault.vault:8200"
-    roleName: "database"
+    roleName: {{ .Values.namespace }}-role
     objects: |
       - objectName: "db-password"
-        secretPath: "amanday/data/db-pass"
+        secretPath: "yesodot/"{{ .Values.namespace }}"/"{{ .Values.secret.name }}
         secretKey: "password"
